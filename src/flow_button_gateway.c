@@ -65,8 +65,10 @@
 #define IPC_SERVER_PORT			(54321)
 #define IPC_CLIENT_PORT			(12345)
 #define IP_ADDRESS				"127.0.0.1"
-#define BUTTON_STR			"Counter"
-#define LED_STR				"On/Off"
+#define COUNTER_STR				"Counter"
+#define ON_OFF_STR					"On/Off"
+#define BUTTON_DEVICE_STR		"ButtonDevice"
+#define LED_DEVICE_STR			"LedDevice"
 #define FLOW_ACCESS_OBJECT_ID		(20001)
 #define FLOW_OBJECT_INSTANCE_ID		(0)
 #define ON_STR				"on"
@@ -130,7 +132,7 @@ FILE *debugStream = NULL;
 static OBJECT_T objects[] =
 {
 	{
-		"ButtonDevice",
+		BUTTON_DEVICE_STR,
 		BUTTON_OBJECT_ID,
 		0,
 		"DigitalInput",
@@ -140,12 +142,12 @@ static OBJECT_T objects[] =
 								BUTTON_RESOURCE_ID,
 								0,
 								AwaResourceType_Integer,
-								BUTTON_STR
+								COUNTER_STR
 							},
 						}
 	},
 	{
-		"LedDevice",
+		LED_DEVICE_STR,
 		LED_OBJECT_ID,
 		0,
 		"LightControl",
@@ -155,7 +157,7 @@ static OBJECT_T objects[] =
 								LED_RESOURCE_ID,
 								0,
 								AwaResourceType_Boolean,
-								LED_STR
+								ON_OFF_STR
 							},
 						}
 	},
@@ -501,7 +503,7 @@ static bool WriteLedResource(const AwaServerSession *session, const bool value)
 																value) == AwaError_Success)
 			{
 				if ((error = AwaServerWriteOperation_Perform(operation,
-														"LedDevice",
+														LED_DEVICE_STR,
 														OPERATION_TIMEOUT)) == AwaError_Success)
 				{
 					LOG(LOG_INFO, "Written %d to server.\n", value);
@@ -549,26 +551,61 @@ void PerformUpdate(const AwaClientSession *clientSession,
 }
 
 /**
- * @brief Poll button status on server and call for update in case of changes.
-
- * @param *clientSession holds client session.
- * @param *serverSession holds server session.
- * @return Ideally this function should never exit and should keep on running in while,
- *        however, there are some exit points, and out of those, there is one which is
- *        forcing the calling function to call it again after some initializations.
+ * @brief Observe callback gets called when there is change in button status.
+ * @param *context a pointer to any data passed from callback registration function.
+ * @param *changeSet a pointer to a valid ChangeSet.
  */
-static bool StartPollingButtonstate(const AwaClientSession *clientSession,
-										const AwaServerSession *serverSession)
+void ObserveCallback(const AwaChangeSet *changeSet, void *context)
 {
-	AwaServerReadOperation *operation = NULL;
-	char buttonResourcePath[URL_PATH_SIZE] = {0};
-	AwaError error = AwaError_Unspecified;
-	int cachedState;
+	char path[URL_PATH_SIZE] = {0};
+	const AwaInteger *value = NULL;
+	const AwaServerSession *serverSession = AwaChangeSet_GetServerSession(changeSet);
+	const AwaClientSession *clientSession = AwaChangeSet_GetClientSession(changeSet);
 
-	operation = AwaServerReadOperation_New(serverSession);
+	if (AwaAPI_MakeResourcePath(path,
+										URL_PATH_SIZE,
+										BUTTON_OBJECT_ID,
+										0, BUTTON_RESOURCE_ID) != AwaError_Success)
+	{
+		LOG(LOG_INFO, "Couldn't generate all object and resource paths.\n");
+	}
+
+
+	if (path != NULL)
+	{
+		AwaObjectID objectID = AWA_INVALID_ID;
+		AwaObjectInstanceID objectInstanceID = AWA_INVALID_ID;
+		AwaResourceID resourceID = AWA_INVALID_ID;
+		AwaError result;
+
+		AwaServerSession_PathToIDs(serverSession, path, &objectID, &objectInstanceID, &resourceID);
+
+		result = AwaChangeSet_GetValueAsIntegerPointer(changeSet, path, &value);
+
+		if (result == AwaError_Success)
+		{
+			bool temp = *value % 2;
+			PerformUpdate(clientSession, serverSession, temp);
+		}
+	}
+}
+
+/**
+ * @brief Observe button status on server and call for update in case of changes.
+
+ * @param *serverSession holds server session.
+ * @return true if observing button has been set successfully, else false.
+ */
+static bool StartObservingButton(const AwaServerSession *session)
+{
+	AwaServerObserveOperation *operation = NULL;
+	char buttonResourcePath[URL_PATH_SIZE] = {0};
+	const AwaPathResult *pathResult = NULL;
+
+	operation = AwaServerObserveOperation_New(session);
 	if (operation == NULL)
 	{
-		LOG(LOG_INFO, "Read operation on server failed.\n");
+		LOG(LOG_ERR, "Failed to create observe operation");
 		return false;
 	}
 
@@ -581,48 +618,39 @@ static bool StartPollingButtonstate(const AwaClientSession *clientSession,
 		return false;
 	}
 
-	error = AwaServerReadOperation_AddPath(operation, "ButtonDevice", buttonResourcePath);
-	if (error == AwaError_Success)
-	{
-		while (true)
-		{
-			error = AwaServerReadOperation_Perform(operation, OPERATION_TIMEOUT);
-			if (error == AwaError_Success)
-			{
-				const AwaServerReadResponse *readResponse = NULL;
-				readResponse = AwaServerReadOperation_GetResponse(operation, "ButtonDevice");
-				if (readResponse != NULL)
-				{
-					const AwaInteger *value = NULL;
+	AwaServerObservation *observation = AwaServerObservation_New(BUTTON_DEVICE_STR,
+																	buttonResourcePath,
+																	ObserveCallback,
+																	NULL);
 
-					AwaServerReadResponse_GetValueAsIntegerPointer(readResponse,
-																		buttonResourcePath,
-																		&value);
-					if ((value != NULL) && (cachedState != *value))
-					{
-						bool temp = *value % 2;
-						PerformUpdate(clientSession, serverSession, temp);
-						cachedState = *value;
-					}
-				}
-				else
-				{
-					LOG(LOG_ERR, "AwaServerReadOperation_GetResponse failed");
-					return false;
-				}
-				SetHeartbeatLed(false);
-				sleep(1);
-				SetHeartbeatLed(true);
-			}
-			else
-			{
-				LOG(LOG_ERR, "AwaServerReadOperation_Perform failed\n"
-														"error: %s", AwaError_ToString(error));
-				return true;
-			}
+	if (observation != NULL)
+	{
+		if (AwaServerObserveOperation_AddObservation(operation, observation) != AwaError_Success)
+		{
+			LOG(LOG_ERR, "AwaServerObserveOperation_AddObservation failed");
+			return false;
 		}
 	}
-	return false;
+
+	if (AwaServerObserveOperation_Perform(operation, OPERATION_TIMEOUT) != AwaError_Success)
+	{
+		LOG(LOG_ERR, "Failed to perform observe operation");
+		return false;
+	}
+
+	const AwaServerObserveResponse *response = NULL;
+	response = AwaServerObserveOperation_GetResponse(operation, BUTTON_DEVICE_STR);
+
+	pathResult = AwaServerObserveResponse_GetPathResult(response, buttonResourcePath);
+	if (AwaPathResult_GetError(pathResult) != AwaError_Success)
+	{
+		LOG(LOG_ERR, "AwaServerObserveResponse_GetPathResult failed\n");
+		return false;
+	}
+
+	AwaServerObserveOperation_Free(&operation);
+
+	return true;
 }
 
 /**
@@ -1022,26 +1050,21 @@ int main(int argc, char **argv)
 			}
 		}
 
-		while (true)
+		if (StartObservingButton(serverSession))
 		{
-			if (StartPollingButtonstate(clientSession, serverSession))
+			while(true)
 			{
-				if (AwaServerSession_Disconnect(serverSession) != AwaError_Success)
+				if (AwaServerSession_Process(serverSession, 1000 /* 1 second */) != AwaError_Success)
 				{
-					LOG(LOG_ERR, "Failed to disconnect server session");
+					LOG(LOG_ERR, "AwaServerSession_Process() failed");
+					break;
 				}
-
-				if (AwaServerSession_Free(&serverSession) != AwaError_Success)
-				{
-					LOG(LOG_WARN, "Failed to free server session");
-				}
-				sleep(1);
-				serverSession = Server_EstablishSession(IPC_SERVER_PORT, IP_ADDRESS);
+				AwaServerSession_DispatchCallbacks(serverSession);
 			}
-			else
-			{
-				break;
-			}
+		}
+		else
+		{
+			LOG(LOG_ERR, "StartObservingButton failed");
 		}
 	}
 
