@@ -1,6 +1,6 @@
 # Add executable targets
 ########################
-ADD_EXECUTABLE(flow_button_gateway_appd flow_button_gateway.c flow_interface.c)
+ADD_EXECUTABLE(button_gateway_appd button_gateway.c flow_interface.c)
 
 # Add library targets
 #####################
@@ -12,5 +12,5 @@ TARGET_LINK_LIBRARIES(flow_button_gateway_appd ${LIB_AWA} ${LIB_FLOWCORE} ${LIB_
 
 # Add install targets
 ######################
-INSTALL(TARGETS flow_button_gateway_appd RUNTIME DESTINATION bin)
+INSTALL(TARGETS button_gateway_appd RUNTIME DESTINATION bin)
 
