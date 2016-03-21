@@ -8,8 +8,8 @@ Flow button gateway application runs on Ci40 which acts as a gateway for MicroE 
 - Sends a flow message to user with ON or OFF status of led.
 
 Gateway application is serving two purposes here:
-- It is acting as awam2m server to communicate with awam2m client running on constrained devices.
-- It is acting as awam2m client to communicate with Flowcloud awam2m server.
+- It is acting as awalwm2m server to communicate with awalwm2m client running on constrained devices.
+- It is acting as awalwm2m client to communicate with FlowCloud awalwm2m server.
 
 | Object Name     | Object ID      | Resource Name | Resource ID |
 | :----           | :--------------| :-------------| :-----------|
@@ -18,9 +18,9 @@ Gateway application is serving two purposes here:
 
 ## Prerequisites
 Prior to running flow button gateway application, make sure that:
-- Awam2m client daemon(awa_clientd) is running.
-- Awam2m server daemon(awa_serverd) is running.
-- Awam2m bootstrap daemon(awa_bootstrapd) is running.
+- Awalwm2m client daemon(awa_clientd) is running.
+- Awalwm2m server daemon(awa_serverd) is running.
+- Awalwm2m bootstrap daemon(awa_bootstrapd) is running.
 - Device provisioning is done.
 
 **NOTE:** Please do "ps" on console to see "specific" process is running or not.
