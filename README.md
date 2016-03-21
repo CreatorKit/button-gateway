@@ -1,7 +1,7 @@
-# Flow Button Gateway application
+# Button Gateway application
 
 ## Overview
-Flow button gateway application runs on Ci40 which acts as a gateway for MicroE boards. One of the MicroE boards acts as a client which holds button resource, and another one also acts as a client which holds led resource. Gateway application observes button resource value, and whenever there is a change in its value, gateway application gets a notification for the change, and take further actions. After receiving notification for button change, gateway application
+Button gateway application runs on Ci40 which acts as a gateway for MicroE boards. One of the MicroE boards acts as a client which holds button resource, and another one also acts as a client which holds led resource. Gateway application observes button resource value, and whenever there is a change in its value, gateway application gets a notification for the change, and take further actions. After receiving notification for button change, gateway application
 
 - Updates the led resource value, which was created by led client, to on or off, depending upon button events.
 - Sets the led status of same resource created by itself, so that the observer gets the notification on the change of its value.
@@ -17,7 +17,7 @@ Gateway application is serving two purposes here:
 | "Actuation"     | 3311           | "On/Off"       | 5850        |
 
 ## Prerequisites
-Prior to running flow button gateway application, make sure that:
+Prior to running button gateway application, make sure that:
 - Awalwm2m client daemon(awa_clientd) is running.
 - Awalwm2m server daemon(awa_serverd) is running.
 - Awalwm2m bootstrap daemon(awa_bootstrapd) is running.
