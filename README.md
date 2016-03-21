@@ -28,11 +28,11 @@ Prior to running button gateway application, make sure that:
 ## Running Application on Ci40 board
 Button Application is getting started as a daemon. Although we could also start it from the command line as :
 
-*$ flow_button_gateway*
+*$ button_gateway*
 
 Output looks something similar to this :
 ```
-Flow Button Gateway Application
+Button Gateway Application
 
 ------------------------
 
