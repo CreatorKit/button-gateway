@@ -263,7 +263,7 @@ static int ParseCommandArgs(int argc, char *argv[], const char **fptr)
 static bool ConstructAndSendFlowMessage(const bool ledState)
 {
     char *data = NULL;
-    bool success = true;
+    bool result = true;
     unsigned int msgSize = 0, strSize = 0;
     char msgStr[] = "%02d:%02d:%02d %02d-%02d-%04d LED %s";
 
@@ -288,14 +288,14 @@ static bool ConstructAndSendFlowMessage(const bool ledState)
                 timeNow.tm_year + 1900,
                 ledState?ON_STR:OFF_STR);
 
-        success = SendMessage(data) && PublishStatus(data);
+        result = SendMessage(data) && PublishStatus(data);
         Flow_MemFree((void **)&data);
     }
     else
     {
-        success = false;
+        result = false;
     }
-    return success;
+    return result;
 }
 
 
@@ -307,21 +307,18 @@ static bool ConstructAndSendFlowMessage(const bool ledState)
  */
 static bool WaitForProvisioning(AwaClientSession *session)
 {
-    bool success = false;
+    bool result = false;
 
     AwaClientGetOperation *operation = AwaClientGetOperation_New(session);
     char instancePath[URL_PATH_SIZE] = {0};
 
     if (operation != NULL)
     {
-        if (AwaAPI_MakeObjectInstancePath(instancePath,
-                                                URL_PATH_SIZE,
-                                                FLOW_ACCESS_OBJECT_ID, 0) == AwaError_Success)
+        if (AwaAPI_MakeObjectInstancePath(instancePath, URL_PATH_SIZE, FLOW_ACCESS_OBJECT_ID, 0) == AwaError_Success)
         {
             if (AwaClientGetOperation_AddPath(operation, instancePath) == AwaError_Success)
             {
-                if (AwaClientGetOperation_Perform(operation,
-                                                        OPERATION_TIMEOUT) == AwaError_Success)
+                if (AwaClientGetOperation_Perform(operation, OPERATION_TIMEOUT) == AwaError_Success)
                 {
                     const AwaClientGetResponse *response = NULL;
                     response = AwaClientGetOperation_GetResponse(operation);
@@ -330,7 +327,7 @@ static bool WaitForProvisioning(AwaClientSession *session)
                         if (AwaClientGetResponse_ContainsPath(response, instancePath))
                         {
                             LOG(LOG_INFO, "Gateway is provisioned.\n");
-                            success = true;
+                            result = true;
                         }
                     }
                 }
@@ -338,7 +335,7 @@ static bool WaitForProvisioning(AwaClientSession *session)
         }
         AwaClientGetOperation_Free(&operation);
     }
-    return success;
+    return result;
 }
 
 /**
@@ -350,18 +347,15 @@ bool IsLedObjectDefined(const AwaClientSession *session)
 {
     AwaClientGetOperation *operation = AwaClientGetOperation_New(session);
     char instancePath[URL_PATH_SIZE] = {0};
-    bool success = false;
+    bool result = false;
 
     if (operation != NULL)
     {
-        if (AwaAPI_MakeObjectInstancePath(instancePath,
-                                                URL_PATH_SIZE,
-                                                LED_OBJECT_ID, 0) == AwaError_Success)
+        if (AwaAPI_MakeObjectInstancePath(instancePath, URL_PATH_SIZE, LED_OBJECT_ID, 0) == AwaError_Success)
         {
             if (AwaClientGetOperation_AddPath(operation, instancePath) == AwaError_Success)
             {
-                if (AwaClientGetOperation_Perform(operation,
-                                                        OPERATION_TIMEOUT) == AwaError_Success)
+                if (AwaClientGetOperation_Perform(operation, OPERATION_TIMEOUT) == AwaError_Success)
                 {
                     const AwaClientGetResponse *response = NULL;
                     response = AwaClientGetOperation_GetResponse(operation);
@@ -369,7 +363,7 @@ bool IsLedObjectDefined(const AwaClientSession *session)
                     {
                         if (AwaClientGetResponse_ContainsPath(response, instancePath))
                         {
-                            success = true;
+                            result = true;
                         }
                     }
                 }
@@ -377,7 +371,7 @@ bool IsLedObjectDefined(const AwaClientSession *session)
         }
         AwaClientGetOperation_Free(&operation);
     }
-    return success;
+    return result;
 }
 
 /**
@@ -390,36 +384,30 @@ static bool SetLedResource(const AwaClientSession *session, const bool value)
 {
     AwaClientSetOperation *operation = NULL;
     char ledResourcePath[URL_PATH_SIZE] = {0};
-    bool success = false;
+    bool result = false;
     AwaError error;
 
     operation = AwaClientSetOperation_New(session);
 
     if (operation != NULL)
     {
-        if (AwaAPI_MakeResourcePath(ledResourcePath,
-                                        URL_PATH_SIZE,
-                                        LED_OBJECT_ID, 0, LED_RESOURCE_ID) == AwaError_Success)
+        if (AwaAPI_MakeResourcePath(ledResourcePath, URL_PATH_SIZE, LED_OBJECT_ID, 0, LED_RESOURCE_ID) == AwaError_Success)
         {
             if (!IsLedObjectDefined(session))
             {
                 AwaClientSetOperation_CreateObjectInstance(operation, LED_RESOURCE_PATH);
             }
 
-            if (AwaClientSetOperation_AddValueAsBoolean(operation,
-                                                                ledResourcePath,
-                                                                value) == AwaError_Success)
+            if (AwaClientSetOperation_AddValueAsBoolean(operation, ledResourcePath, value) == AwaError_Success)
             {
-                if ((error = AwaClientSetOperation_Perform(operation,
-                                                        OPERATION_TIMEOUT)) == AwaError_Success)
+                if ((error = AwaClientSetOperation_Perform(operation, OPERATION_TIMEOUT)) == AwaError_Success)
                 {
-                    success = true;
+                    result = true;
                     LOG(LOG_INFO, "Set %d on client.\n",value);
                 }
                 else
                 {
-                    LOG(LOG_ERR, "AwaClientSetOperation_Perform failed\n"
-                                                        "error: %s", AwaError_ToString(error));
+                    LOG(LOG_ERR, "AwaClientSetOperation_Perform failed\nerror: %s", AwaError_ToString(error));
                 }
             }
         }
@@ -429,7 +417,7 @@ static bool SetLedResource(const AwaClientSession *session, const bool value)
         }
         AwaClientSetOperation_Free(&operation);
     }
-    return success;
+    return result;
 }
 
 /**
@@ -445,18 +433,13 @@ static bool IsResourceDefined(const AwaServerSession *session, const char *path)
     AwaError error;
     const AwaResourceDefinition *resourceDefinition = NULL;
 
-    if ((error = AwaServerSession_PathToIDs(session,
-                                        path,
-                                        &objectID,
-                                        NULL,
-                                        &resourceID)) == AwaError_Success)
+    if ((error = AwaServerSession_PathToIDs(session, path, &objectID, NULL, &resourceID)) == AwaError_Success)
     {
         const AwaObjectDefinition *objectDefinition = NULL;
         objectDefinition = AwaServerSession_GetObjectDefinition(session, objectID);
         if (objectDefinition != NULL)
         {
-            resourceDefinition = AwaObjectDefinition_GetResourceDefinition(objectDefinition,
-                                                                                resourceID);
+            resourceDefinition = AwaObjectDefinition_GetResourceDefinition(objectDefinition, resourceID);
         }
         else
         {
@@ -465,8 +448,7 @@ static bool IsResourceDefined(const AwaServerSession *session, const char *path)
     }
     else
     {
-        LOG(LOG_ERR, "AwaServerSession_PathToIDs() failed\n"
-                                                        "error: %s", AwaError_ToString(error));
+        LOG(LOG_ERR, "AwaServerSession_PathToIDs() failed\nerror: %s", AwaError_ToString(error));
     }
     return (resourceDefinition != NULL);
 }
@@ -480,7 +462,7 @@ static bool IsResourceDefined(const AwaServerSession *session, const char *path)
 static bool WriteLedResource(const AwaServerSession *session, const bool value)
 {
     char ledResourcePath[URL_PATH_SIZE] = {0};
-    bool success = false;
+    bool result = false;
     AwaError error;
 
     AwaServerWriteOperation *operation = NULL;
@@ -488,27 +470,20 @@ static bool WriteLedResource(const AwaServerSession *session, const bool value)
 
     if (operation != NULL)
     {
-        if (AwaAPI_MakeResourcePath(ledResourcePath,
-                                            URL_PATH_SIZE,
-                                            LED_OBJECT_ID, 0, LED_RESOURCE_ID) == AwaError_Success)
+        if (AwaAPI_MakeResourcePath(ledResourcePath, URL_PATH_SIZE, LED_OBJECT_ID, 0, LED_RESOURCE_ID) == AwaError_Success)
         {
             if (IsResourceDefined(session, ledResourcePath))
             {
-                if (AwaServerWriteOperation_AddValueAsBoolean(operation,
-                                                                    ledResourcePath,
-                                                                    value) == AwaError_Success)
+                if (AwaServerWriteOperation_AddValueAsBoolean(operation, ledResourcePath, value) == AwaError_Success)
                 {
-                    if ((error = AwaServerWriteOperation_Perform(operation,
-                                                            LED_DEVICE_STR,
-                                                            OPERATION_TIMEOUT)) == AwaError_Success)
+                    if ((error = AwaServerWriteOperation_Perform(operation, LED_DEVICE_STR, OPERATION_TIMEOUT)) == AwaError_Success)
                     {
                         LOG(LOG_INFO, "Written %d to server.\n", value);
-                        success = true;
+                        result = true;
                     }
                     else
                     {
-                        LOG(LOG_ERR, "AwaServerWriteOperation_Perform failed\n"
-                                                            "error: %s", AwaError_ToString(error));
+                        LOG(LOG_ERR, "AwaServerWriteOperation_Perform failed\nerror: %s", AwaError_ToString(error));
                     }
                 }
             }
@@ -519,7 +494,7 @@ static bool WriteLedResource(const AwaServerSession *session, const bool value)
         }
         AwaServerWriteOperation_Free(&operation);
     }
-    return success;
+    return result;
 }
 
 /**
@@ -528,9 +503,7 @@ static bool WriteLedResource(const AwaServerSession *session, const bool value)
  * @param *serverSession holds server session.
  * @param buttonState button resource value to update.
  */
-void PerformUpdate(const AwaClientSession *clientSession,
-                        const AwaServerSession *serverSession,
-                        const bool buttonState)
+void PerformUpdate(const AwaClientSession *clientSession, const AwaServerSession *serverSession, const bool buttonState)
 {
     if (!WriteLedResource(serverSession, buttonState))
     {
@@ -562,27 +535,20 @@ void ObserveCallback(const AwaChangeSet *changeSet, void *context)
     const AwaInteger *value = NULL;
     const AwaServerSession *serverSession = AwaChangeSet_GetServerSession(changeSet);
 
-    if (AwaAPI_MakeResourcePath(path,
-                                        URL_PATH_SIZE,
-                                        BUTTON_OBJECT_ID,
-                                        0, BUTTON_RESOURCE_ID) != AwaError_Success)
+    if (AwaAPI_MakeResourcePath(path, URL_PATH_SIZE, BUTTON_OBJECT_ID, 0, BUTTON_RESOURCE_ID) != AwaError_Success)
     {
         LOG(LOG_INFO, "Couldn't generate all object and resource paths.\n");
     }
-
 
     if (path != NULL)
     {
         AwaObjectID objectID = AWA_INVALID_ID;
         AwaObjectInstanceID objectInstanceID = AWA_INVALID_ID;
         AwaResourceID resourceID = AWA_INVALID_ID;
-        AwaError result;
 
         AwaServerSession_PathToIDs(serverSession, path, &objectID, &objectInstanceID, &resourceID);
 
-        result = AwaChangeSet_GetValueAsIntegerPointer(changeSet, path, &value);
-
-        if (result == AwaError_Success)
+        if (AwaChangeSet_GetValueAsIntegerPointer(changeSet, path, &value) == AwaError_Success)
         {
             buttonState = *value % 2;
         }
@@ -591,7 +557,6 @@ void ObserveCallback(const AwaChangeSet *changeSet, void *context)
 
 /**
  * @brief Observe button status on server and call for update in case of changes.
-
  * @param *serverSession holds server session.
  * @return true if observing button has been set successfully, else false.
  */
@@ -608,19 +573,13 @@ static bool StartObservingButton(const AwaServerSession *session)
         return false;
     }
 
-    if (AwaAPI_MakeResourcePath(buttonResourcePath,
-                                        URL_PATH_SIZE,
-                                        BUTTON_OBJECT_ID,
-                                        0, BUTTON_RESOURCE_ID) != AwaError_Success)
+    if (AwaAPI_MakeResourcePath(buttonResourcePath, URL_PATH_SIZE, BUTTON_OBJECT_ID, 0, BUTTON_RESOURCE_ID) != AwaError_Success)
     {
         LOG(LOG_INFO, "Couldn't generate all object and resource paths.\n");
         return false;
     }
 
-    AwaServerObservation *observation = AwaServerObservation_New(BUTTON_DEVICE_STR,
-                                                                    buttonResourcePath,
-                                                                    ObserveCallback,
-                                                                    NULL);
+    AwaServerObservation *observation = AwaServerObservation_New(BUTTON_DEVICE_STR, buttonResourcePath, ObserveCallback, NULL);
 
     if (observation != NULL)
     {
@@ -661,14 +620,13 @@ static bool StartObservingButton(const AwaServerSession *session)
  */
 static bool CheckConstrainedRegistered(const AwaServerSession *session, const char *endPointName)
 {
-    bool success = false;
+    bool result = false;
     AwaError error;
 
     AwaServerListClientsOperation *operation = AwaServerListClientsOperation_New(session);
     if (operation != NULL)
     {
-        if ((error = AwaServerListClientsOperation_Perform(operation,
-                                                        OPERATION_TIMEOUT)) == AwaError_Success)
+        if ((error = AwaServerListClientsOperation_Perform(operation, OPERATION_TIMEOUT)) == AwaError_Success)
         {
             AwaClientIterator *clientIterator = NULL;
             clientIterator = AwaServerListClientsOperation_NewClientIterator(operation);
@@ -681,7 +639,7 @@ static bool CheckConstrainedRegistered(const AwaServerSession *session, const ch
                     if (!strcmp(endPointName, clientID))
                     {
                         LOG(LOG_INFO, "Constrained device %s registered", endPointName);
-                        success = true;
+                        result = true;
                         break;
                     }
                 }
@@ -694,21 +652,19 @@ static bool CheckConstrainedRegistered(const AwaServerSession *session, const ch
         }
         else
         {
-            LOG(LOG_ERR, "AwaServerListClientsOperation_Perform failed\n"
-                                                        "error: %s", AwaError_ToString(error));
+            LOG(LOG_ERR, "AwaServerListClientsOperation_Perform failed\nerror: %s", AwaError_ToString(error));
         }
 
         if ((error = AwaServerListClientsOperation_Free(&operation)) != AwaError_Success)
         {
-            LOG(LOG_ERR, "AwaServerListClientsOperation_Free failed\n"
-                                                        "error: %s", AwaError_ToString(error));
+            LOG(LOG_ERR, "AwaServerListClientsOperation_Free failed\nerror: %s", AwaError_ToString(error));
         }
     }
     else
     {
         LOG(LOG_ERR, "AwaServerListClientsOperation_New failed");
     }
-    return success;
+    return result;
 }
 
 /**
@@ -720,8 +676,7 @@ static AwaObjectDefinition *AddResourceDefinitions(OBJECT_T *object)
 {
     int i;
 
-    AwaObjectDefinition *objectDefinition = AwaObjectDefinition_New(object->id,
-        object->name, MIN_INSTANCES, MAX_INSTANCES);
+    AwaObjectDefinition *objectDefinition = AwaObjectDefinition_New(object->id, object->name, MIN_INSTANCES, MAX_INSTANCES);
     if (objectDefinition != NULL)
     {
         // define resources
@@ -776,7 +731,7 @@ bool DefineClientObjects(AwaClientSession *session)
 {
     unsigned int i;
     unsigned int definitionCount = 0;
-    bool success = true;
+    bool result = true;
 
     LOG(LOG_INFO, "Defining flow objects on client");
 
@@ -793,7 +748,7 @@ bool DefineClientObjects(AwaClientSession *session)
         return false;
     }
 
-    for (i = 0; (i < ARRAY_SIZE(objects)) && success; i++)
+    for (i = 0; (i < ARRAY_SIZE(objects)) && result; i++)
     {
         if (AwaClientSession_IsObjectDefined(session, objects[i].id))
         {
@@ -808,26 +763,26 @@ bool DefineClientObjects(AwaClientSession *session)
             if (AwaClientDefineOperation_Add(handler, objectDefinition) != AwaError_Success)
             {
                 LOG(LOG_ERR, "Failed to add object definition to define operation on client");
-                success = false;
+                result = false;
             }
             definitionCount++;
             AwaObjectDefinition_Free(&objectDefinition);
         }
     }
 
-    if (success && definitionCount != 0)
+    if (result && definitionCount != 0)
     {
         if (AwaClientDefineOperation_Perform(handler, OPERATION_TIMEOUT) != AwaError_Success)
         {
             LOG(LOG_ERR, "Failed to perform define operation on client");
-            success = false;
+            result = false;
         }
     }
     if (AwaClientDefineOperation_Free(&handler) != AwaError_Success)
     {
         LOG(LOG_WARN, "Failed to free define operation object on client");
     }
-    return success;
+    return result;
 }
 
 /**
@@ -839,7 +794,7 @@ bool DefineServerObjects(AwaServerSession *session)
 {
     unsigned int i;
     unsigned int definitionCount = 0;
-    bool success = true;
+    bool result = true;
 
     LOG(LOG_INFO, "Defining flow objects on server");
 
@@ -856,7 +811,7 @@ bool DefineServerObjects(AwaServerSession *session)
         return false;
     }
 
-    for (i = 0; (i < ARRAY_SIZE(objects)) && success; i++)
+    for (i = 0; (i < ARRAY_SIZE(objects)) && result; i++)
     {
         if (AwaServerSession_IsObjectDefined(session, objects[i].id))
         {
@@ -871,26 +826,26 @@ bool DefineServerObjects(AwaServerSession *session)
             if (AwaServerDefineOperation_Add(handler, objectDefinition) != AwaError_Success)
             {
                 LOG(LOG_ERR, "Failed to add object definition to define operation on server");
-                success = false;
+                result = false;
             }
             definitionCount++;
             AwaObjectDefinition_Free(&objectDefinition);
         }
     }
 
-    if (success && definitionCount != 0)
+    if (result && definitionCount != 0)
     {
         if (AwaServerDefineOperation_Perform(handler, OPERATION_TIMEOUT) != AwaError_Success)
         {
             LOG(LOG_ERR, "Failed to perform define operation on server");
-            success = false;
+            result = false;
         }
     }
     if (AwaServerDefineOperation_Free(&handler) != AwaError_Success)
     {
         LOG(LOG_WARN, "Failed to free define operation object on server");
     }
-    return success;
+    return result;
 }
 
 /**

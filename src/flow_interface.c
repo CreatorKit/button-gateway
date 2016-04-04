@@ -156,10 +156,7 @@ static bool GetConfigData(RegistrationData *regData)
  * @param *rememberMeToken remember me token for flow cloud access.
  * @return true if libflow initialization is successful, else false.
  */
-static bool InitialiseLibFlow(const char *url,
-                                const char *key,
-                                const char *secret,
-                                const char *rememberMeToken)
+static bool InitialiseLibFlow(const char *url, const char *key, const char *secret, const char *rememberMeToken)
 {
     if (FlowCore_Initialise())
     {
@@ -287,11 +284,7 @@ bool SendMessage(char *message)
 
     if (memoryManager)
     {
-        if (FlowMessaging_SendMessageToUser((FlowID)userId,
-                                                "text/plain",
-                                                message,
-                                                strlen(message),
-                                                MESSAGE_EXPIRY_TIMEOUT))
+        if (FlowMessaging_SendMessageToUser((FlowID)userId, "text/plain", message, strlen(message), MESSAGE_EXPIRY_TIMEOUT))
         {
             LOG(LOG_INFO, "Message sent to user = %s",message);
             FlowMemoryManager_Free(&memoryManager);
@@ -325,12 +318,7 @@ bool PublishStatus(char *message)
 
     if (memoryManager)
     {
-        if (FlowMessaging_PublishToDeviceTopic("DeviceStatus",
-                                                (FlowID)deviceId,
-                                                "text/plain",
-                                                message,
-                                                strlen(message),
-                                                MESSAGE_EXPIRY_TIMEOUT))
+        if (FlowMessaging_PublishToDeviceTopic("DeviceStatus",  (FlowID)deviceId, "text/plain", message, strlen(message), MESSAGE_EXPIRY_TIMEOUT))
         {
             LOG(LOG_INFO, "Status published = %s",message);
             FlowMemoryManager_Free(&memoryManager);
