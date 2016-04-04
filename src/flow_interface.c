@@ -68,12 +68,12 @@
  */
 typedef struct
 {
-	/*@{*/
-	char url[MAX_SIZE]; /**< flow server url */
-	char key[MAX_SIZE]; /**< customer authentification key */
-	char secret[MAX_SIZE]; /**< customer secret key */
-	char rememberMeToken[MAX_SIZE]; /**< remember me token */
-	/*@}*/
+    /*@{*/
+    char url[MAX_SIZE]; /**< flow server url */
+    char key[MAX_SIZE]; /**< customer authentification key */
+    char secret[MAX_SIZE]; /**< customer secret key */
+    char rememberMeToken[MAX_SIZE]; /**< remember me token */
+    /*@}*/
 }RegistrationData;
 
 
@@ -90,15 +90,15 @@ typedef struct
  */
 static bool GetValueForKey(config_t *cfg, char *dest, const char *key)
 {
-	const char *tmp;
+    const char *tmp;
 
-	if (config_lookup_string(cfg, key, &tmp) != CONFIG_FALSE)
-	{
-		strncpy(dest, tmp, MAX_SIZE - 1);
-		dest[MAX_SIZE - 1] = '\0';
-		return true;
-	}
-	return false;
+    if (config_lookup_string(cfg, key, &tmp) != CONFIG_FALSE)
+    {
+        strncpy(dest, tmp, MAX_SIZE - 1);
+        dest[MAX_SIZE - 1] = '\0';
+        return true;
+    }
+    return false;
 }
 
 /**
@@ -109,43 +109,43 @@ static bool GetValueForKey(config_t *cfg, char *dest, const char *key)
  */
 static bool GetConfigData(RegistrationData *regData)
 {
-	config_t cfg;
-	bool success = false;
-	int i;
+    config_t cfg;
+    bool success = false;
+    int i;
 
-	config_init(&cfg);
+    config_init(&cfg);
 
-	for (i = FILE_READ_TRIALS; i > 0; i--)
-	{
-		if (!config_read_file(&cfg, CONFIG_FILE))
-		{
-			LOG(LOG_INFO, "Waiting for config data");
-			sleep(1);
-		}
-		else
-		{
-			if (GetValueForKey(&cfg, regData->url, "URL") &&
-				GetValueForKey(&cfg, regData->key, "CustomerKey") &&
-				GetValueForKey(&cfg, regData->secret, "CustomerSecret") &&
-				GetValueForKey(&cfg, regData->rememberMeToken, "RememberMeToken"))
-			{
-				success = true;
-			}
-			else
-			{
-				LOG(LOG_ERR, "Failed to read config data");
-			}
-			config_destroy(&cfg);
-			break;
-		}
-	}
+    for (i = FILE_READ_TRIALS; i > 0; i--)
+    {
+        if (!config_read_file(&cfg, CONFIG_FILE))
+        {
+            LOG(LOG_INFO, "Waiting for config data");
+            sleep(1);
+        }
+        else
+        {
+            if (GetValueForKey(&cfg, regData->url, "URL") &&
+                GetValueForKey(&cfg, regData->key, "CustomerKey") &&
+                GetValueForKey(&cfg, regData->secret, "CustomerSecret") &&
+                GetValueForKey(&cfg, regData->rememberMeToken, "RememberMeToken"))
+            {
+                success = true;
+            }
+            else
+            {
+                LOG(LOG_ERR, "Failed to read config data");
+            }
+            config_destroy(&cfg);
+            break;
+        }
+    }
 
-	if (i == 0)
-	{
-		LOG(LOG_ERR, "Failed to read config file");
-		config_destroy(&cfg);
-	}
-	return success;
+    if (i == 0)
+    {
+        LOG(LOG_ERR, "Failed to read config file");
+        config_destroy(&cfg);
+    }
+    return success;
 }
 
 /**
@@ -157,50 +157,50 @@ static bool GetConfigData(RegistrationData *regData)
  * @return true if libflow initialization is successful, else false.
  */
 static bool InitialiseLibFlow(const char *url,
-								const char *key,
-								const char *secret,
-								const char *rememberMeToken)
+                                const char *key,
+                                const char *secret,
+                                const char *rememberMeToken)
 {
-	if (FlowCore_Initialise())
-	{
-		size_t length = strlen(rememberMeToken) +1;
+    if (FlowCore_Initialise())
+    {
+        size_t length = strlen(rememberMeToken) +1;
 
-		FlowNVS_Set("core.deviceremembermetoken", rememberMeToken, length);
+        FlowNVS_Set("core.deviceremembermetoken", rememberMeToken, length);
 
-		FlowCore_Shutdown();
+        FlowCore_Shutdown();
 
-		if (FlowCore_Initialise())
-		{
-			FlowCore_RegisterTypes();
+        if (FlowCore_Initialise())
+        {
+            FlowCore_RegisterTypes();
 
-			if (FlowMessaging_Initialise())
-			{
-				if (FlowClient_ConnectToServer(url, key, secret, true))
-				{
-					return true;
-				}
-				else
-				{
-					FlowCore_Shutdown();
-					FlowMessaging_Shutdown();
-					LOG(LOG_ERR, "Failed to connect to server");
-				}
-			}
-			else
-			{
-				LOG(LOG_ERR, "Flow Messaging initialization failed");
-			}
-		}
-		else
-		{
-			LOG(LOG_ERR, "Flow Core re-initialization failed");
-		}
-	}
-	else
-	{
-		LOG(LOG_ERR, "Flow Core initialization failed");
-	}
-	return false;
+            if (FlowMessaging_Initialise())
+            {
+                if (FlowClient_ConnectToServer(url, key, secret, true))
+                {
+                    return true;
+                }
+                else
+                {
+                    FlowCore_Shutdown();
+                    FlowMessaging_Shutdown();
+                    LOG(LOG_ERR, "Failed to connect to server");
+                }
+            }
+            else
+            {
+                LOG(LOG_ERR, "Flow Messaging initialization failed");
+            }
+        }
+        else
+        {
+            LOG(LOG_ERR, "Flow Core re-initialization failed");
+        }
+    }
+    else
+    {
+        LOG(LOG_ERR, "Flow Core initialization failed");
+    }
+    return false;
 }
 
 
@@ -211,31 +211,31 @@ static bool InitialiseLibFlow(const char *url,
  */
 static bool GetUserId(char *userId)
 {
-	FlowMemoryManager memoryManager = FlowMemoryManager_New();
+    FlowMemoryManager memoryManager = FlowMemoryManager_New();
 
-	if (memoryManager)
-	{
-		FlowDevice device = FlowClient_GetLoggedInDevice(memoryManager);
-		if (device)
-		{
-			FlowID temp;
+    if (memoryManager)
+    {
+        FlowDevice device = FlowClient_GetLoggedInDevice(memoryManager);
+        if (device)
+        {
+            FlowID temp;
 
-			temp = FlowUser_GetUserID(FlowDevice_RetrieveOwner(device));
-			strcpy(userId, temp);
-			FlowMemoryManager_Free(&memoryManager);
-			return true;
-		}
-		else
-		{
-			LOG(LOG_ERR, "Failed to get logged in device");
-		}
-		FlowMemoryManager_Free(&memoryManager);
-	}
-	else
-	{
-		LOG(LOG_ERR, "Failed to create memory manager");
-	}
-	return false;
+            temp = FlowUser_GetUserID(FlowDevice_RetrieveOwner(device));
+            strcpy(userId, temp);
+            FlowMemoryManager_Free(&memoryManager);
+            return true;
+        }
+        else
+        {
+            LOG(LOG_ERR, "Failed to get logged in device");
+        }
+        FlowMemoryManager_Free(&memoryManager);
+    }
+    else
+    {
+        LOG(LOG_ERR, "Failed to create memory manager");
+    }
+    return false;
 }
 
 /**
@@ -245,31 +245,31 @@ static bool GetUserId(char *userId)
  */
 static bool GetDeviceId(char *deviceId)
 {
-	FlowMemoryManager memoryManager = FlowMemoryManager_New();
+    FlowMemoryManager memoryManager = FlowMemoryManager_New();
 
-	if (memoryManager)
-	{
-		FlowDevice device = FlowClient_GetLoggedInDevice(memoryManager);
-		if (device)
-		{
-			FlowID temp;
+    if (memoryManager)
+    {
+        FlowDevice device = FlowClient_GetLoggedInDevice(memoryManager);
+        if (device)
+        {
+            FlowID temp;
 
-			temp = FlowDevice_GetDeviceID(device);
-			strcpy(deviceId, temp);
-			FlowMemoryManager_Free(&memoryManager);
-			return true;
-		}
-		else
-		{
-			LOG(LOG_ERR, "Failed to get logged in device");
-		}
-		FlowMemoryManager_Free(&memoryManager);
-	}
-	else
-	{
-		LOG(LOG_ERR, "Failed to create memory manager");
-	}
-	return false;
+            temp = FlowDevice_GetDeviceID(device);
+            strcpy(deviceId, temp);
+            FlowMemoryManager_Free(&memoryManager);
+            return true;
+        }
+        else
+        {
+            LOG(LOG_ERR, "Failed to get logged in device");
+        }
+        FlowMemoryManager_Free(&memoryManager);
+    }
+    else
+    {
+        LOG(LOG_ERR, "Failed to create memory manager");
+    }
+    return false;
 }
 
 /**
@@ -279,35 +279,35 @@ static bool GetDeviceId(char *deviceId)
  */
 bool SendMessage(char *message)
 {
-	char userId[MAX_SIZE];
+    char userId[MAX_SIZE];
 
-	GetUserId(userId);
+    GetUserId(userId);
 
-	FlowMemoryManager memoryManager = FlowMemoryManager_New();
+    FlowMemoryManager memoryManager = FlowMemoryManager_New();
 
-	if (memoryManager)
-	{
-		if (FlowMessaging_SendMessageToUser((FlowID)userId,
-												"text/plain",
-												message,
-												strlen(message),
-												MESSAGE_EXPIRY_TIMEOUT))
-		{
-			LOG(LOG_INFO, "Message sent to user = %s",message);
-			FlowMemoryManager_Free(&memoryManager);
-			return true;
-		}
-		else
-		{
-			LOG(LOG_ERR, "Failed to send message to user");
-		}
-		FlowMemoryManager_Free(&memoryManager);
-	}
-	else
-	{
-		LOG(LOG_ERR, "Failed to create memory manager");
-	}
-	return false;
+    if (memoryManager)
+    {
+        if (FlowMessaging_SendMessageToUser((FlowID)userId,
+                                                "text/plain",
+                                                message,
+                                                strlen(message),
+                                                MESSAGE_EXPIRY_TIMEOUT))
+        {
+            LOG(LOG_INFO, "Message sent to user = %s",message);
+            FlowMemoryManager_Free(&memoryManager);
+            return true;
+        }
+        else
+        {
+            LOG(LOG_ERR, "Failed to send message to user");
+        }
+        FlowMemoryManager_Free(&memoryManager);
+    }
+    else
+    {
+        LOG(LOG_ERR, "Failed to create memory manager");
+    }
+    return false;
 }
 
 /**
@@ -317,36 +317,36 @@ bool SendMessage(char *message)
  */
 bool PublishStatus(char *message)
 {
-	char deviceId[MAX_SIZE];
+    char deviceId[MAX_SIZE];
 
-	GetDeviceId(deviceId);
+    GetDeviceId(deviceId);
 
-	FlowMemoryManager memoryManager = FlowMemoryManager_New();
+    FlowMemoryManager memoryManager = FlowMemoryManager_New();
 
-	if (memoryManager)
-	{
-		if (FlowMessaging_PublishToDeviceTopic("DeviceStatus",
-												(FlowID)deviceId,
-												"text/plain",
-												message,
-												strlen(message),
-												MESSAGE_EXPIRY_TIMEOUT))
-		{
-			LOG(LOG_INFO, "Status published = %s",message);
-			FlowMemoryManager_Free(&memoryManager);
-			return true;
-		}
-		else
-		{
-			LOG(LOG_ERR, "Failed to publish status");
-		}
-		FlowMemoryManager_Free(&memoryManager);
-	}
-	else
-	{
-		LOG(LOG_ERR, "Failed to create memory manager");
-	}
-	return false;
+    if (memoryManager)
+    {
+        if (FlowMessaging_PublishToDeviceTopic("DeviceStatus",
+                                                (FlowID)deviceId,
+                                                "text/plain",
+                                                message,
+                                                strlen(message),
+                                                MESSAGE_EXPIRY_TIMEOUT))
+        {
+            LOG(LOG_INFO, "Status published = %s",message);
+            FlowMemoryManager_Free(&memoryManager);
+            return true;
+        }
+        else
+        {
+            LOG(LOG_ERR, "Failed to publish status");
+        }
+        FlowMemoryManager_Free(&memoryManager);
+    }
+    else
+    {
+        LOG(LOG_ERR, "Failed to create memory manager");
+    }
+    return false;
 }
 
 /**
@@ -355,26 +355,26 @@ bool PublishStatus(char *message)
  */
 bool InitializeAndRegisterFlowDevice(void)
 {
-	RegistrationData regData;
+    RegistrationData regData;
 
-	if (GetConfigData(&regData))
-	{
-		if (InitialiseLibFlow(regData.url, regData.key, regData.secret, regData.rememberMeToken))
-		{
-			if (FlowClient_IsDeviceLoggedIn())
-			{
-				LOG(LOG_INFO, "Device registration successful");
-				return true;
-			}
-			else
-			{
-				LOG(LOG_ERR, "Failed to login as device");
-			}
-		}
-		else
-		{
-			LOG(LOG_ERR, "Flow Core initialization failed");
-		}
-	}
-	return false;
+    if (GetConfigData(&regData))
+    {
+        if (InitialiseLibFlow(regData.url, regData.key, regData.secret, regData.rememberMeToken))
+        {
+            if (FlowClient_IsDeviceLoggedIn())
+            {
+                LOG(LOG_INFO, "Device registration successful");
+                return true;
+            }
+            else
+            {
+                LOG(LOG_ERR, "Failed to login as device");
+            }
+        }
+        else
+        {
+            LOG(LOG_ERR, "Flow Core initialization failed");
+        }
+    }
+    return false;
 }
