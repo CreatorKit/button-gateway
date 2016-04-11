@@ -962,7 +962,7 @@ int main(int argc, char **argv)
     clientSession = Client_EstablishSession(IPC_CLIENT_PORT, IP_ADDRESS);
     if (clientSession != NULL)
     {
-        LOG(LOG_ERR, "Client session established\n");
+        LOG(LOG_INFO, "Client session established\n");
     }
 
     serverSession = Server_EstablishSession(IPC_SERVER_PORT, IP_ADDRESS);
