@@ -1,3 +1,6 @@
+
+![Creator logo](creatorlogo.png)
+
 # Button Gateway application
 
 ## Overview
