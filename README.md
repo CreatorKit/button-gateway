@@ -1,3 +1,6 @@
+
+![Creator logo](creatorlogo.png)
+
 # Button Gateway application
 
 ## Overview
@@ -29,6 +32,9 @@ Prior to running button gateway application, make sure that:
 - Device provisioning is done.
 
 **NOTE:** Please do "ps" on console to see "specific" process is running or not.
+
+## Application flow diagram
+![Button Gateway Sequence Diagram](button-gateway-seq-diag.png)
 
 ## Running Application on Ci40 board
 Button Application is getting started as a daemon. Although we could also start it from the command line as :
