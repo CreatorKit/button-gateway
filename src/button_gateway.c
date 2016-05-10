@@ -557,7 +557,7 @@ void ObserveCallback(const AwaChangeSet *changeSet, void *context)
 
 /**
  * @brief Observe button status on server and call for update in case of changes.
- * @param *serverSession holds server session.
+ * @param *session holds server session.
  * @return true if observing button has been set successfully, else false.
  */
 static bool StartObservingButton(const AwaServerSession *session)
