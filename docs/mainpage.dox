@@ -1,0 +1,17 @@
+/** @mainpage Button Gateway application
+@section overview Overview
+
+Button gateway application runs on Ci40 board, which acts as a gateway for MikroE boards. One of the
+MikroE boards acts as awalwm2m client to simulate button, and another one also acts as awalwm2m client
+to simulate led. Gateway application observes any button presses on former board, and whenever there is
+a change, gateway application gets a notification for the same, and take further actions. After receiving
+notification for button change, gateway application
+
+- Change led state to ON or OFF, depending upon button events.
+- Sets the led state on awalwm2m client running on Ci40, so that the observer gets the notification on the value change.
+- Sends a flow message to FlowM2M user's account with ON or OFF status of led.
+
+Gateway application serves two purposes:
+- It acts as Awalwm2m server to communicate with Awalwm2m client that is running on a constrained device.
+- It acts as Awalwm2m client to communicate with Awalwm2m server on FlowM2M.
+ */

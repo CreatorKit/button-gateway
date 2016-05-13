@@ -1,13 +1,13 @@
 
-![Creator logo](creatorlogo.png)
+![Creator logo](docs/creatorlogo.png)
 
 # Button Gateway application
 
 ## Overview
-Button gateway application runs on Ci40 which acts as a gateway for MikroE boards. One of the MikroE boards acts as a client which holds button resource, and another one also acts as a client which holds led resource. Gateway application observes button resource value, and whenever there is a change in its value, gateway application gets a notification for the change, and take further actions. After receiving notification for button change, gateway application
+Button gateway application runs on Ci40 board, which acts as a gateway for MikroE boards. One of the MikroE boards acts as awalwm2m client to simulate button, and another one also acts as awalwm2m client to simulate led. Gateway application observes any button presses on former board, and whenever there is a change, gateway application gets a notification for the same, and take further actions. After receiving notification for button change, gateway application
 
-- Updates the led resource value, which was created by led client, to on or off, depending upon button events.
-- Sets the led status of same resource created by itself, so that the observer gets the notification on the change of its value.
+- Change led state to ON or OFF, depending upon button events.
+- Sets the led state on awalwm2m client running on Ci40, so that the observer gets the notification on the value change.
 - Sends a flow message to FlowM2M user's account with ON or OFF status of led.
 
 Gateway application serves two purposes:
@@ -34,7 +34,21 @@ Prior to running button gateway application, make sure that:
 **NOTE:** Please do "ps" on console to see "specific" process is running or not.
 
 ## Application flow diagram
-![Button Gateway Sequence Diagram](button-gateway-seq-diag.png)
+![Button Gateway Sequence Diagram](docs/button-gateway-seq-diag.png)
+
+## API guide
+
+Button Gateway documentation is available as a Doxygen presentation which is generated via the following process.
+
+  1. Install [Doxygen ](http://www.stack.nl/~dimitri/doxygen/download.html): ```` sudo apt-get install doxygen````
+  2. Generate the documentation:
+
+        $ button-gateway: mkdir build
+        $ button-gateway/build: cd build
+        $ button-gateway/build: cmake ../docs
+        $ button-gateway/build: make docs
+
+The output can be found in the build/html directory and viewed by opening index.html with your web browser.
 
 ## Running Application on Ci40 board
 Button Application is getting started as a daemon. Although we could also start it from the command line as :
