@@ -113,4 +113,3 @@ Set 0 on client.
 
 Message sent to user = 12:36:11 18-03-2016 LED off
 ```
->>>>>>> dev
